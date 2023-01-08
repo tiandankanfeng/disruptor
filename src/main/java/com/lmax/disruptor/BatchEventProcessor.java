@@ -200,7 +200,7 @@ public final class BatchEventProcessor<T>
                     {
                         eventHandler.onBatchStart(endOfBatchSequence - nextSequence + 1, availableSequence - nextSequence + 1);
                     }
-
+                    // 批处理
                     while (nextSequence <= endOfBatchSequence)
                     {
                         event = dataProvider.get(nextSequence);

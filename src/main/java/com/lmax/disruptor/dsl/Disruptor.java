@@ -58,6 +58,7 @@ public class Disruptor<T>
 {
     private final RingBuffer<T> ringBuffer;
     private final ThreadFactory threadFactory;
+    // 处理消费者的各种关系
     private final ConsumerRepository<T> consumerRepository = new ConsumerRepository<>();
     private final AtomicBoolean started = new AtomicBoolean(false);
     private ExceptionHandler<? super T> exceptionHandler = new ExceptionHandlerWrapper<>();
@@ -117,6 +118,7 @@ public class Disruptor<T>
      *
      * @param handlers the event handlers that will process events.
      * @return a {@link EventHandlerGroup} that can be used to chain dependencies.
+     * 单线程批处理事件
      */
     @SuppressWarnings("varargs")
     @SafeVarargs
@@ -497,6 +499,7 @@ public class Disruptor<T>
         final Sequence[] processorSequences = new Sequence[eventHandlers.length];
         final SequenceBarrier barrier = ringBuffer.newBarrier(barrierSequences);
 
+        // 构建多个BatchEventProcessor
         for (int i = 0, eventHandlersLength = eventHandlers.length; i < eventHandlersLength; i++)
         {
             final EventHandler<? super T> eventHandler = eventHandlers[i];
@@ -512,7 +515,7 @@ public class Disruptor<T>
             consumerRepository.add(batchEventProcessor, eventHandler, barrier);
             processorSequences[i] = batchEventProcessor.getSequence();
         }
-
+        // 添加完事件处理器，更新门控序列
         updateGatingSequencesForNextInChain(barrierSequences, processorSequences);
 
         return new EventHandlerGroup<>(this, consumerRepository, processorSequences);
@@ -527,6 +530,7 @@ public class Disruptor<T>
             {
                 ringBuffer.removeGatingSequence(barrierSequence);
             }
+            // 取消标记上一组消费者为消费链末端
             consumerRepository.unMarkEventProcessorsAsEndOfChain(barrierSequences);
         }
     }

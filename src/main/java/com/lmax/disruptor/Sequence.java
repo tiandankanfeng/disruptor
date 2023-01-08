@@ -23,6 +23,7 @@ class Value extends LhsPadding
 
 class RhsPadding extends Value
 {
+    // cpu would preload the seven long val
     protected byte
         p90, p91, p92, p93, p94, p95, p96, p97,
         p100, p101, p102, p103, p104, p105, p106, p107,
@@ -44,6 +45,7 @@ class RhsPadding extends Value
 public class Sequence extends RhsPadding
 {
     static final long INITIAL_VALUE = -1L;
+    // 更高的一种技巧
     private static final VarHandle VALUE_FIELD;
 
     static

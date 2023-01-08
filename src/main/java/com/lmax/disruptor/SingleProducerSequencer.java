@@ -144,21 +144,23 @@ public final class SingleProducerSequencer extends SingleProducerSequencerFields
 
         long nextSequence = nextValue + n;
         long wrapPoint = nextSequence - bufferSize;
+        // the slowest consume sequence
         long cachedGatingSequence = this.cachedValue;
-
+        // loop validate, avoid covering
         if (wrapPoint > cachedGatingSequence || cachedGatingSequence > nextValue)
         {
             cursor.setVolatile(nextValue);  // StoreLoad fence
 
             long minSequence;
+            // loop util the slowest sequence move
             while (wrapPoint > (minSequence = Util.getMinimumSequence(gatingSequences, nextValue)))
             {
                 LockSupport.parkNanos(1L); // TODO: Use waitStrategy to spin?
             }
-
+            // update the slowest sequence
             this.cachedValue = minSequence;
         }
-
+        // nextValue record the free sequence this time get
         this.nextValue = nextSequence;
 
         return nextSequence;
@@ -222,7 +224,9 @@ public final class SingleProducerSequencer extends SingleProducerSequencerFields
     @Override
     public void publish(final long sequence)
     {
+        // 更新sequence内部游标值
         cursor.set(sequence);
+        // 唤醒消费者
         waitStrategy.signalAllWhenBlocking();
     }
 

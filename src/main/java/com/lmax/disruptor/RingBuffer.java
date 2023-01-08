@@ -37,6 +37,7 @@ abstract class RingBufferFields<E> extends RingBufferPad
     private final long indexMask;
     private final E[] entries;
     protected final int bufferSize;
+    // 生产者访问序列的接口
     protected final Sequencer sequencer;
 
     @SuppressWarnings("unchecked")
@@ -469,7 +470,9 @@ public final class RingBuffer<E> extends RingBufferFields<E> implements Cursored
     @Override
     public void publishEvent(final EventTranslator<E> translator)
     {
+        // 获取可用序列位置
         final long sequence = sequencer.next();
+        // 发布数据
         translateAndPublish(translator, sequence);
     }
 
@@ -967,6 +970,7 @@ public final class RingBuffer<E> extends RingBufferFields<E> implements Cursored
     {
         try
         {
+            // 获取对象容器以及序号，用户自定义实现
             translator.translateTo(get(sequence), sequence);
         }
         finally
